@@ -3,7 +3,14 @@ Nucmer from Mummer3 followed by ggplot for nicer and more customisable genome al
 
 ## Installation
 
-Install conda if it's not already installed, get your distribution here: https://docs.conda.io/en/latest/miniconda.html
+Install conda if it's not already installed, get your distribution here: https://docs.conda.io/en/latest/miniconda.html . For a user on a UNIX-based HPC/cluster, the following can be done, please answer 'yes' to every question. You need to close the current window and open a new one after the installation is done:
+
+```
+cd ~
+wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
+chmod +x Miniconda3-latest-Linux-x86_64.sh
+./Miniconda3-latest-Linux-x86_64.sh
+```
 
 Create a conda virtual environment for mummer-ggplot
 
