@@ -39,7 +39,7 @@ conda activate mummer-ggplot
 Execute the first step: nucmer. It will launch jobs on a slurm queue.
 
 ```
-mggNucmer ../mummer-ggplot/fasta/ mggNucmer-out
+mggNucmer ../mummer-ggplot/fasta/reference.fa ../mummer-ggplot/fasta/chromosomes.txt ../mummer-ggplot/fasta/ mggNucmer-out
 ```
 
 Execute the delta-filter step.
@@ -48,7 +48,7 @@ Execute the delta-filter step.
 mggFilter mggNucmer-out 98 1000
 ```
 
-Execute the last plotting step.
+Execute the plotting step.
 
 ```
 mggPlot mggNucmer-out
@@ -63,12 +63,12 @@ Check your plots :)
 Usage:
 
 ```
-mggNucmer in_folder out_folder
+mggNucmer reference_fasta chromosomes in_folder out_folder
 ```
 
 Description:
 
-It launches nucmer from Mummer on all fasta files in a given folder and outputs delta files in a given folder.
+It launches nucmer from Mummer using `reference_fasta` as the reference and all fasta files in `in_folder` as queries. Fasta files names should have the following nomenclature: `genome.chromosome.fa`. Since the tool is made to work on multiple chromosomes, a `chromosomes.txt` file is necessary, which contains one chromosome name per line. mggNucmer will only look for the fasta files whose name is matching those chromosomes. mggNucmer outputs delta files in the `out_folder`.
 
 ### mggFilter
 
