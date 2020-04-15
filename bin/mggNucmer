@@ -1,0 +1,82 @@
+#!/usr/bin/env Rscript
+# LAUNCHES NUCMER ON SEVERAL CHROMOSOMES OF MULTIPLE GENOMES
+
+
+#### LIBRARIES LOADING ####
+
+library( 'argparse' )
+
+#options( show.error.locations = TRUE )
+
+
+#### ARGUMENTS PARSING ####
+
+parser <- ArgumentParser(description= "mggNucmer launches nucmer from mummer3 on several chromosomes of multiple genomes at once. It takes a folder with fasta files as input and outputs delta files in a target folder (mummer format). This tool should be launched directly, not with sbatch. It uses SlurmEasy (and thus the slurm job scheduler) to launch jobs.",
+                         usage = "mggNucmer --input  fastas/ --output deltas/")
+
+parser$add_argument("--input","-i", type="character", default=NULL, action="store", dest="input", metavar="FOLDER",
+                    help="Input folder with fasta files. All files finishing by '.fa' or '.fasta' will be used. They must be named using the following convention: 'genome_name.chromosome.fa', for instance 'dm3.2L.fa'." )
+
+parser$add_argument("--reference","-r", type="character", default=NULL, action="store", dest="reference", metavar="FOLDER",
+                    help="Folder path containing all the reference genome '.fa' or '.fasta' files. This reference will be aligned to all fasta files stored in the input directory, chromosome by chromosome (with matching names). Fasta files must be named using the following convention: 'genome_name.chromosome.fa', for instance 'dm3.2L.fa'.")
+
+parser$add_argument("--chromosomes","-c", type="character",action="store", nargs='+', dest="chromosomes", default=NULL,
+                    help="Here you can define the chromosome names you want the program to run on. Simply put the chromosome names one after the other, separated by a space, for instance `-c 2R 2L 3L 3R`." )
+
+parser$add_argument("--output", "-o", type="character", default=NULL, action="store", dest="output", metavar="FOLDER",
+                    help="Output folder name where delta files will be stored." )
+
+parser$add_argument("--cpu", "-p", type="integer", default=2, action="store", dest="cpu", metavar="INT",
+                    help="Number of CPU to use. Default: 2" )
+
+parser$add_argument("--mem", "-m", type="character", default="2G", action="store", dest="mem", metavar="INT",
+                    help="Memory to use per CPU. It can be expressed in Gb or Mb: 2G or 2000M. This is multiplied by --cpu. Default: 2G" )
+
+args <- parser$parse_args()
+
+
+#### SANITY CHECK ####
+
+if ( is.null( args$input ) ) {
+  parser$print_help()
+  stop( "An input folder must be supplied.", call.=FALSE )
+}
+
+if ( is.null( args$reference ) ) {
+  parser$print_help()
+  stop( "A reference genome folder must be supplied.", call.=FALSE )
+}
+
+if ( is.null( args$chromosomes ) ) {
+  parser$print_help()
+  stop( "Some chromosome names matching both the reference and input fasta files must be supplied.", call.=FALSE )
+}
+
+if ( is.null( args$output ) ) {
+  parser$print_help()
+  stop( "An input folder must be supplied.", call.=FALSE )
+}
+
+
+#### SET WD AND GET ABS PATHS ####
+
+args$input <- normalizePath( args$input )
+args$reference <- normalizePath( args$reference )
+
+dir.create(path = args$output)
+args$output<- normalizePath( args$output )
+
+#### NUCMER LAUNCHING ####
+
+for (chrom in 1:length(args$chromosomes)){
+  chr <- args$chromosomes[chrom]
+  search_pattern <- paste0("\\.",chr,".fa$|\\.",chr,".fasta$")
+  inputFiles <- list.files(path = args$input,pattern = search_pattern)
+  referenceFile <- list.files(path = args$reference,pattern = search_pattern)
+  for (f in 1:length(inputFiles)){
+    command <- noquote(paste0('SlurmEasy -t ', args$cpu,' --mem-per-cpu ', args$mem,' -n mggNucmer "nucmer ',args$reference,'/',referenceFile,' ',args$input,'/',inputFiles[f],' -p ',args$output,"/",basename(inputFiles[f]),'.delta"'))
+    cat("submitting", command, "under ID ")
+    #system(command)
+    cat("\n")
+  }
+}
