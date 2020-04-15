@@ -6,7 +6,7 @@
 
 library( 'argparse' )
 
-#options( show.error.locations = TRUE )
+options( show.error.locations = TRUE )
 
 
 #### ARGUMENTS PARSING ####
@@ -15,9 +15,9 @@ parser <- ArgumentParser(description= "mggFile launches delta-filter from mummer
                          usage = "mggFilter --input  deltas/ --identity 98 --length 1000")
 
 parser$add_argument("--input","-i", type="character", default=NULL, action="store", dest="input", metavar="FOLDER",
-                    help="Input folder with delta files. All files finishing by '.delta' will be used. They must be named using the following convention: 'genome_name.chromosome.fa.delta', for instance 'dm3.2L.fa.delta'." )
+                    help="Input folder with delta files. All files finishing by '.delta' will be used. They must be named using the following convention: 'genome_name.chromosome.fa.delta', for instance 'dm3.2L.fa.delta'.")
 
-parser$add_argument("--identity","-i", type="integer", action="store", dest="identity", metavar="INT", default=98,
+parser$add_argument("--identity","-d", type="integer", action="store", dest="identity", metavar="INT", default=98,
                     help="Minimum identity of the alignments found by nucmer between reference and query to be kept in the filtered delta file. Check delta-filter documentation from Mummer for more information.")
 
 parser$add_argument("--length","-l", type="integer", action="store", dest="length", metavar="INT", default=1000,
