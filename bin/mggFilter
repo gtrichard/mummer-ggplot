@@ -1,0 +1,48 @@
+#!/usr/bin/env Rscript
+# LAUNCHES NUCMER ON SEVERAL CHROMOSOMES OF MULTIPLE GENOMES
+
+
+#### LIBRARIES LOADING ####
+
+library( 'argparse' )
+
+#options( show.error.locations = TRUE )
+
+
+#### ARGUMENTS PARSING ####
+
+parser <- ArgumentParser(description= "mggFile launches delta-filter from mummer3 on several chromosomes of multiple genomes at once. It takes a folder with delta files as input and outputs delta.filtered files in the same folder (mummer format). This tool should be launched directly, not with sbatch. It uses SlurmEasy (and thus the slurm job scheduler) to launch jobs",
+                         usage = "mggFilter --input  deltas/ --identity 98 --length 1000")
+
+parser$add_argument("--input","-i", type="character", default=NULL, action="store", dest="input", metavar="FOLDER",
+                    help="Input folder with delta files. All files finishing by '.delta' will be used. They must be named using the following convention: 'genome_name.chromosome.fa.delta', for instance 'dm3.2L.fa.delta'." )
+
+parser$add_argument("--identity","-i", type="integer", action="store", dest="identity", metavar="INT", default=98,
+                    help="Minimum identity of the alignments found by nucmer between reference and query to be kept in the filtered delta file. Check delta-filter documentation from Mummer for more information.")
+
+parser$add_argument("--length","-l", type="integer", action="store", dest="length", metavar="INT", default=1000,
+                    help="Minimum length of the alignments found by nucmer between reference and query to be kept in the filtered delta file. Check delta-filter documentation from Mummer for more information.")
+
+args <- parser$parse_args()
+
+#### SANITY CHECK ####
+
+if ( is.null( args$input ) ) {
+  parser$print_help()
+  stop( "An input folder must be supplied.", call.=FALSE )
+}
+
+#### SET WD AND GET ABS PATHS ####
+
+args$input <- normalizePath( args$input )
+
+#### DELTA FILTER LAUNCHING ####
+
+search_pattern <- paste0("\\.delta$")
+inputFiles <- list.files(path = args$input,pattern = search_pattern)
+
+for (f in 1:length(inputFiles)){
+  command <- paste0("delta-filter -i ", args$identity, " -l ", args$length, " ", args$input,"/",inputFiles[f], " > ", args$input,"/",inputFiles[f],".filtered")
+  cat("Doing ", command, "\n")
+  system(command)
+}
