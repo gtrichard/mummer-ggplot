@@ -74,7 +74,7 @@ for (chrom in 1:length(args$chromosomes)){
   inputFiles <- list.files(path = args$input,pattern = search_pattern)
   referenceFile <- list.files(path = args$reference,pattern = search_pattern)
   for (f in 1:length(inputFiles)){
-    command <- noquote(paste0('SlurmEasy -t ', args$cpu,' --mem-per-cpu ', args$mem,' -n mggNucmer "nucmer ',args$reference,'/',referenceFile,' ',args$input,'/',inputFiles[f],' -p ',args$output,"/",basename(inputFiles[f]),'.delta"'))
+    command <- noquote(paste0('SlurmEasy -t ', args$cpu,' --mem-per-cpu ', args$mem,' -n mggNucmer "nucmer ',args$reference,'/',referenceFile,' ',args$input,'/',inputFiles[f],' -p ',args$output,"/",basename(inputFiles[f]),'"'))
     cat("submitting", command, "under ID ")
     system(command)
     cat("\n")
