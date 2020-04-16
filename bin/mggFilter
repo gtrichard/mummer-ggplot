@@ -11,7 +11,7 @@ options( show.error.locations = TRUE )
 
 #### ARGUMENTS PARSING ####
 
-parser <- ArgumentParser(description= "mggFile launches delta-filter from mummer3 on several chromosomes of multiple genomes at once. It takes a folder with delta files as input and outputs delta.filtered files in the same folder (mummer format). This tool should be launched directly, not with sbatch. It uses SlurmEasy (and thus the slurm job scheduler) to launch jobs",
+parser <- ArgumentParser(description= "mggFile launches delta-filter from mummer3 on several chromosomes of multiple genomes at once. It takes a folder with delta files as input and outputs delta.filtered files in the same folder (mummer format). This tool should be launched by sbatch or SlurmEasy, not directly (opposite of mggNucmer).",
                          usage = "mggFilter --input  deltas/ --identity 98 --length 1000")
 
 parser$add_argument("--input","-i", type="character", default=NULL, action="store", dest="input", metavar="FOLDER",
