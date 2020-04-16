@@ -5,6 +5,14 @@
 #### LIBRARIES LOADING ####
 
 library( 'argparse' )
+library(dplyr)
+library(magrittr)
+#library(GenomicRanges)
+#library(knitr)
+library(ggplot2)
+library(tidyr)
+library(stringr)
+
 
 #options( show.error.locations = TRUE )
 
