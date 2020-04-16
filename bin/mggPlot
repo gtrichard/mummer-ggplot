@@ -96,7 +96,7 @@ nucmer_data <- do.call(rbind, deltas)
 #### PLOT ####
 
 pdf(args$output, width=args$width, height=args$height)
-ggplot(nucmer_delta, aes(y=rs, yend=re, x=qs, xend=qe, colour=strand)) +
+ggplot(nucmer_data, aes(y=rs, yend=re, x=qs, xend=qe, colour=strand)) +
   geom_point(alpha=.15, size = 0.3, pch = 1) +
   scale_color_manual(values = c("red", "blue"))+
   facet_wrap(chromosome ~ genome, scales = "free",strip.position = "top")+
