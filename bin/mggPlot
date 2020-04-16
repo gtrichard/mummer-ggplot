@@ -79,7 +79,7 @@ deltasFiles <- list.files( path = args$input, pattern = search_pattern )
 deltas <- list()
 
 for ( i in 1:length(deltasFiles)){
-  deltas[[i]] <- readDelta(deltasFiles[i])
+  deltas[[i]] <- readDelta(paste0(args$input,"/",deltasFiles[i]))
 }
 
 names(deltas) <- sub("\\.*fa.*", "", deltasFiles)
