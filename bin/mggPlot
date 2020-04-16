@@ -1,0 +1,108 @@
+#!/usr/bin/env Rscript
+# LAUNCHES NUCMER ON SEVERAL CHROMOSOMES OF MULTIPLE GENOMES
+
+
+#### LIBRARIES LOADING ####
+
+library( 'argparse' )
+
+#options( show.error.locations = TRUE )
+
+
+#### ARGUMENTS PARSING ####
+
+parser <- ArgumentParser(description= "mggPlot takes a folder as input and collects all delta.filtered files to plot them in an automatic manner. This tool can be executed via sbatch or with SlurmEasy.",
+                         usage = "mggNucmer --input  fastas/ --output deltas/")
+
+parser$add_argument("--input","-i", type="character", default=NULL, action="store", dest="input", metavar="FOLDER",
+                    help="Input folder with delta.filtered files. All files finishing by '.delta.filtered' will be used. They must be named using the following convention: 'genome_name.chromosome.fa.delta.filtered', for instance 'dm3.2L.fa.delta.filtered'." )
+
+parser$add_argument("--output","-o", type="character", default=NULL, action="store", dest="output", metavar="FILENAME",
+                    help="Output file name for the PDF file.")
+
+parser$add_argument("--width","-w", type="numeric", action="store", dest="width", metavar="FLOAT", default=15.7,
+                    help="Plot width. 15.7 inch by default.")
+
+parser$add_argument("--height","-h", type="numeric",action="store", dest="height", metavar="FLOAT", default=17,
+                    help="Plot height. 17 inch by default.")
+
+args <- parser$parse_args()
+
+#### SANITY CHECK ####
+
+if ( is.null( args$input ) ) {
+  parser$print_help()
+  stop( "An input folder must be supplied.", call.=FALSE )
+}
+
+if ( is.null( args$output ) ) {
+  parser$print_help()
+  stop( "An output name must be supplied.", call.=FALSE )
+}
+
+
+#### FUNCTIONS ####
+
+readDelta <- function(deltafile){
+  lines = scan(deltafile, 'a', sep='\n', quiet=TRUE)
+  lines = lines[-1]
+  lines.l = strsplit(lines, ' ')
+  lines.len = lapply(lines.l, length) %>% as.numeric
+  lines.l = lines.l[lines.len != 1]
+  lines.len = lines.len[lines.len != 1]
+  head.pos = which(lines.len == 4)
+  head.id = rep(head.pos, c(head.pos[-1], length(lines.l)+1)-head.pos)
+  mat = matrix(as.numeric(unlist(lines.l[lines.len==7])), 7)
+  res = as.data.frame(t(mat[1:5,]))
+  colnames(res) = c('rs','re','qs','qe','error')
+  res$qid = unlist(lapply(lines.l[head.id[lines.len==7]], '[', 2))
+  res$rid = unlist(lapply(lines.l[head.id[lines.len==7]], '[', 1)) %>% gsub('^>', '', .)
+  res$strand = ifelse(res$qe-res$qs > 0, '+', '-')
+  res
+}
+
+
+#### READ FILES FROM FOLDER ####
+
+args$input <- normalizePath( args$input )
+search_pattern <- paste0("\\.delta.filtered$")
+
+deltasFiles <- list.files( path = args$input, pattern = search_pattern )
+deltas <- list()
+
+for ( i in 1:length(deltasFiles)){
+  deltas[[i]] <- readDelta(deltasFiles[i])
+}
+
+names(deltas) <- sub("\\.*fa.*", "", deltasFiles)
+names(deltas) <- sub("\\genome.", "", names(deltas))
+
+for ( i in 1:length(deltasFiles)){
+  deltas[[i]]["genome"] <- sub("\\..*", "", names(deltas))[i]
+  deltas[[i]]["chromosome"] <- sub('.*C', 'C' ,sub(".*A", "A", names(deltas)))[i]
+}
+
+nucmer_data <- do.call(rbind, deltas)
+
+
+#### PLOT ####
+
+pdf(args$output, width=args$width, height=args$height)
+ggplot(nucmer_delta, aes(y=rs, yend=re, x=qs, xend=qe, colour=strand)) +
+  geom_point(alpha=.15, size = 0.3, pch = 1) +
+  scale_color_manual(values = c("red", "blue"))+
+  facet_wrap(chromosome ~ genome, scales = "free",strip.position = "top")+
+  xlab('Other B. napus genome assemblies (in Mb)') +
+  ylab('B. napus Darmor v9 genome assembly (in Mb)')+
+  scale_x_continuous(breaks= c(0, 1e+07, 2e+07, 3e+07,4e+07,5e+07,6e+07,7e+07,8e+07, 9e+07), labels=c("0", "10", "20", "30", "40","50","60","70","80", "90"))+
+  scale_y_continuous(breaks= c(0, 1e+07, 2e+07, 3e+07,4e+07,5e+07,6e+07,7e+07,8e+07, 9e+07), labels=c("0", "10", "20", "30", "40","50","60","70","80", "90"))+
+  theme_bw() +
+  theme(legend.position="none",
+        strip.background=element_blank(),
+        strip.text.x = element_text(margin=margin(b=0.85)),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        axis.title.y = element_text(margin = margin(0,10,0,0)),
+        axis.title.x = element_text(margin = margin(10,0,0,0)),
+        panel.spacing.x = unit(units = "cm", 0.5))
+dev.off()
