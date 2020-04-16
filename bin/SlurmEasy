@@ -1,0 +1,193 @@
+#!/home/genouest/inra_umr1349/grichard/miniconda3/bin/python3.7
+
+__description__="""
+SlurmEasy-0.1.1 - A wrapper around sbatch for submitting jobs to slurm.
+
+I've attempted as much as possible to copy over the functionality and options from SGEeasy.
+
+TODO: dependency, start delay/time, time limit
+
+Devon Ryan
+"""
+
+import argparse
+import os
+import datetime
+import subprocess
+import sys
+
+now = datetime.datetime.now()
+
+NTHREADS = 16 # -c or -S?
+QUEUE = "genouest" # -p
+EMAIL_TYPE = "ALL" # --mail-type=...
+WORKING_DIR = os.getcwd() # -D
+NAME = os.getlogin() # -J
+MEM = "1000" # --mem-per-cpu=... 3541 5781
+CMD_TO_LOG = False
+QUEUES = ['genouest', 'tiny']
+ENV_STRING = "export LC_ALL=en_US.UTF-8; export LANG=en_US.UTF-8; export LANGUAGE=en_US.UTF-8;"
+MAINTEMP = "/tmp/"
+
+# Could set a custom stdout and stderr with -o and -e
+
+def parse_args():
+    parser = argparse.ArgumentParser(prog="SlurmEasy")
+
+    #These are optional and most have defaults
+    parser.add_argument("-t", "--threads", dest="threads", metavar="INT", help="maximum number of threads (default: '{}')".format(NTHREADS), type=int, default=NTHREADS)
+    parser.add_argument("-l", "--log", dest="log_dir", metavar="logdir", help="directory for writing stdout and stderr log files (default: '{}')".format(WORKING_DIR), type=str, default=WORKING_DIR)
+    parser.add_argument("--no_log", dest="no_log", action="store_true", default=False, help="Do not write log files.")
+    parser.add_argument("-D", "--working_dir", dest="working_dir", metavar="workingdir", help="The working directory, in case you're not already in it and your commands use relative paths (default: '{}')".format(WORKING_DIR), type=str, default=WORKING_DIR)
+    parser.add_argument("--tempdir", dest="tempdir", metavar="tempdir", help="User temp directory (default: '{}/tmp.XXXXXXXXXX')".format(MAINTEMP), type=str, default=MAINTEMP)
+    parser.add_argument("-d", "--dependency", dest="dependency", metavar="INT", help="A job number to use as a dependency. Slurm will then wait until it's completed before starting this one. N.B., an integer is only labeled as being optional here to make integration with snakemake simpler.", type=int, nargs='?', const=False)
+    parser.add_argument("-c", "--cmd_to_log", dest="cmd_to_log", action="store_true", help="echo bash commands to stdout (*.o) LOG file (default: '{}')".format(CMD_TO_LOG), default=CMD_TO_LOG)
+    parser.add_argument("-n", "--name", dest="name", help="job name, which will also affect the log file names (default: '{}')".format(NAME), type=str, default=NAME)
+    parser.add_argument("-m", "--mem-per-cpu", dest="mem", metavar="MEMORY", help="maximum memory per core in MB if not otherwise specified (e.g. '6G', default: '{}')".format(MEM), type=str, default=MEM)
+    parser.add_argument("-M", "--email", dest="email", help="Send an email to this address once the job has finished (see also --emailType) (default: ''). Note that you can specify this without an email address and {}@ie-freiburg.mpg.de will automatically be used.".format(NAME), type=str, const=True, default=False, nargs='?')
+    parser.add_argument("--env_string", dest="env_string", help="Environment settings (default: '{}')".format(ENV_STRING), type=str, default=ENV_STRING)
+    parser.add_argument("--emailType", dest="emailType", help="send email once the job has hit this state: BEGIN, END, FAIL or ALL finished (default: '{}')".format(EMAIL_TYPE), type=str, default=EMAIL_TYPE, choices=['BEGIN', 'END', 'FAIL', 'ALL'])
+    parser.add_argument("-q", "--queuename", dest="partition", help="The queue/partition to use (default: '{}')".format(QUEUE), type=str, default=QUEUE, choices=QUEUES)
+    parser.add_argument("-k", "--keepscript", dest="keep_script", action="store_true", default=False, help="keep auto-generated job script (*.slurm.sh)")
+    parser.add_argument("-w", "--nodelist", default=None, help="If specified, a comma separated list of nodes that can be used, e.g. 'deep14,deep15'")
+    parser.add_argument("-x", "--exclude", default=None, help="If specified, a comma separated list of nodes that can not be used. For example: deep9,deep10")
+    parser.add_argument("-v", "--verbose", dest="verbose", action="store_true", default=False, help="verbose output")
+
+    #Required arguments
+    parser.add_argument('cmd', metavar="COMMANDS", help="Commands (in quotes!) to be run. This can also be a script.")
+
+    args = parser.parse_args()
+
+    return args
+
+def main():
+    args = parse_args()
+
+    #Generate a shell script, line by line
+    script = ["#!/bin/bash", "#SBATCH --ntasks-per-node=1"]
+
+    # -w
+    script.append("#SBATCH -D {}".format(args.working_dir))
+
+    # -t
+    if args.threads > 1:
+        script.append("#SBATCH -c {}".format(args.threads))
+
+    # -n
+    if args.name:
+        script.append("#SBATCH -J {}".format(args.name))
+
+    # -w
+    if args.nodelist:
+        script.append("#SBATCH --nodelist={}".format(args.nodelist))
+
+    # -x
+    if args.exclude:
+        script.append("#SBATCH --exclude={}".format(args.exclude))
+        
+    # -m
+    if args.mem:
+        if args.partition == 'mono' and args.mem == "5781":
+            # The mono queue only uses the newer nodes, so have it default to a lower per-core memory allocation so more jobs will fit
+            args.mem = "3541"
+        if args.threads > 64 and args.mem == "5781":
+            args.mem = "3541"
+        script.append("#SBATCH --mem-per-cpu={}".format(args.mem))
+
+    # -M and --emailType
+    if args.email is not False:
+        if args.email is True:
+            script.append("#SBATCH --mail-user={}@ie-freiburg.mpg.de".format(NAME))
+        else:
+            script.append("#SBATCH --mail-user={}".format(args.email))
+        script.append("#SBATCH --mail-type={}".format(args.emailType))
+
+    # -q
+    script.append("#SBATCH -p {}".format(args.partition))
+
+    # -l
+    if args.no_log:
+        script.append("#SBATCH -o /dev/null")
+        script.append("#SBATCH -e /dev/null")
+    else:
+        script.append("#SBATCH -o {}/{}.{}.%j.out".format(args.log_dir, args.name, now.strftime('%Y%m%d_%H%M%S')))
+        script.append("#SBATCH -e {}/{}.{}.%j.err".format(args.log_dir, args.name, now.strftime('%Y%m%d_%H%M%S')))
+    try:
+        os.makedirs(args.log_dir)
+    except OSError as exc:
+        # This will only throw an error if the user lacks permissions or there's a similar error
+        if type(exc) == FileExistsError:
+            pass
+        else:
+            raise
+
+    # -d
+    if args.dependency:
+        script.append("#SBATCH -d {}".format(args.dependency))
+
+    # Environment variables
+    if MAINTEMP == args.tempdir:
+        script.append("""
+TMPDIR=%s/
+scratch=$(mktemp -p $TMPDIR -d -t tmp.XXXXXXXXXX)""" % MAINTEMP)
+    else:
+        script.append("""
+TMPDIR=%s/
+mkdir $TMPDIR
+scratch=$TMPDIR""" % args.tempdir)
+
+    script.append("""
+export TMPDIR=$scratch/
+export TMP=$scratch/
+export TEMP=$scratch/
+%s
+function cleanup {
+cd /
+    rm -rf $scratch
+}
+trap cleanup SIGTERM SIGKILL SIGUSR2""" % args.env_string)
+
+
+    # -c echo the command
+    if args.cmd_to_log:
+        script.append("echo \"{}\"".format(args.cmd))
+
+    # Add the command
+    script.append("srun {}".format(args.cmd))
+    script.append("cleanup")
+
+    # -v
+    if args.verbose:
+        print("\n".join(script))
+
+    ofname="{}/{}.{}.slurm.sh".format(args.log_dir, args.name, now.strftime('%Y%m%d_%H%M%S'))
+    outfile = open(ofname, "w")
+    for line in script:
+        outfile.write("{}\n".format(line))
+    outfile.close()
+
+    cmd2 = ["sbatch", ofname]
+    sp = subprocess.Popen(cmd2, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    stdout, stderr = sp.communicate()
+
+    # This is so snakemake can figure out dependencies
+    stdout = stdout.decode()
+    stderr = stderr.decode()
+    if stdout.startswith("Submitted batch"):
+        stdout = stdout[20:]
+
+    # In python3, this will print b'' if empty!
+    if len(stderr):
+        sys.stderr.write(stderr)
+    if len(stdout):
+        sys.stdout.write(stdout)
+
+    if not args.keep_script:
+        os.remove(ofname)
+        if args.verbose:
+            print("Removing sbatch script ({})".format(ofname))
+    return(sp.returncode)
+
+if __name__ == "__main__":
+    main()
+
