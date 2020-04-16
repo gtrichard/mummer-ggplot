@@ -105,7 +105,7 @@ pdf(args$output, width=args$width, height=args$height)
 ggplot(nucmer_data, aes(y=rs, yend=re, x=qs, xend=qe, colour=strand)) +
   geom_point(alpha=.15, size = 0.3, pch = 1) +
   scale_color_manual(values = c("red", "blue"))+
-  facet_wrap(chromosome ~ genome, scales = "free",strip.position = "top")+
+  facet_wrap(chromosome ~ genome, scales = "free",strip.position = "top", ncol=args$ncol, nrow=args$nrow)+
   xlab('Other B. napus genome assemblies (in Mb)') +
   ylab('B. napus Darmor v9 genome assembly (in Mb)')+
   scale_x_continuous(breaks= c(0, 1e+07, 2e+07, 3e+07,4e+07,5e+07,6e+07,7e+07,8e+07, 9e+07), labels=c("0", "10", "20", "30", "40","50","60","70","80", "90"))+
