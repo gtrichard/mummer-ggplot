@@ -20,10 +20,10 @@ parser$add_argument("--input","-i", type="character", default=NULL, action="stor
 parser$add_argument("--output","-o", type="character", default=NULL, action="store", dest="output", metavar="FILENAME",
                     help="Output file name for the PDF file.")
 
-parser$add_argument("--width","-w", type="numeric", action="store", dest="width", metavar="FLOAT", default=15.7,
+parser$add_argument("--width","-w", type="double", action="store", dest="width", metavar="FLOAT", default=15.7,
                     help="Plot width. 15.7 inch by default.")
 
-parser$add_argument("--height","-h", type="numeric",action="store", dest="height", metavar="FLOAT", default=17,
+parser$add_argument("--height","-h", type="double",action="store", dest="height", metavar="FLOAT", default=17,
                     help="Plot height. 17 inch by default.")
 
 args <- parser$parse_args()
