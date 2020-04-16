@@ -34,6 +34,12 @@ parser$add_argument("--width", type="double", action="store", dest="width", meta
 parser$add_argument("--height", type="double",action="store", dest="height", metavar="FLOAT", default=17,
                     help="Plot height. 17 inch by default.")
 
+parser$add_argument("--ncol", type="integer",action="store", dest="ncol", metavar="INT", default=NULL,
+                    help="Number of columns for the plot.")
+
+parser$add_argument("--nrow", type="integer",action="store", dest="nrow", metavar="INT", default=NULL,
+                    help="Number of rows for the plot.")
+
 args <- parser$parse_args()
 
 #### SANITY CHECK ####
