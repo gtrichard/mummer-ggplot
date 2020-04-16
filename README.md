@@ -34,7 +34,7 @@ mggNucmer uses SlurmEasy, taken from https://github.com/dpryan79/Misc/blob/maste
 
 You may need to configure it for your cluster (mainly QUEUE line 22, QUEUES line 28 and MAINTEMP line 30).
 
-## Tools
+## Tools
 
 ### mggNucmer
 
