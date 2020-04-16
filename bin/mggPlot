@@ -20,7 +20,7 @@ library(stringr)
 #### ARGUMENTS PARSING ####
 
 parser <- ArgumentParser(description= "mggPlot takes a folder as input and collects all delta.filtered files to plot them in an automatic manner. This tool can be executed via sbatch or with SlurmEasy.",
-                         usage = "mggNucmer --input  fastas/ --output deltas/")
+                         usage = "mggPlot --input  deltas/ --output plot.pdf --ncol 12 --width 19 --height 15.7")
 
 parser$add_argument("--input","-i", type="character", default=NULL, action="store", dest="input", metavar="FOLDER",
                     help="Input folder with delta.filtered files. All files finishing by '.delta.filtered' will be used. They must be named using the following convention: 'genome_name.chromosome.fa.delta.filtered', for instance 'dm3.2L.fa.delta.filtered'." )
