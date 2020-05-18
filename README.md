@@ -39,8 +39,7 @@ You may need to configure it for your cluster (mainly QUEUE line 22, QUEUES line
 ### mggNucmer
 
 ```
-usage: mggNucmer --input  fastas/ --output deltas/
-
+usage: mggNucmer --input  fastas/ --output deltas/ --reference ref_fasta --chromosomes chr1 chr2 chr3
 mggNucmer launches nucmer from mummer3 on several chromosomes of multiple
 genomes at once. It takes a folder with fasta files as input and outputs delta
 files in a target folder (mummer format). This tool should be launched
