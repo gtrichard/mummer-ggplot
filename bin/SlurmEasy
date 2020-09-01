@@ -1,4 +1,4 @@
-#!/home/genouest/inra_umr1349/grichard/miniconda3/bin/python3.7
+#!~/miniconda3/bin/python3.7
 
 __description__="""
 SlurmEasy-0.1.1 - A wrapper around sbatch for submitting jobs to slurm.
