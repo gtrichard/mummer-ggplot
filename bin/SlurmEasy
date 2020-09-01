@@ -15,6 +15,7 @@ import os
 import datetime
 import subprocess
 import sys
+import pwd
 
 now = datetime.datetime.now()
 
@@ -22,7 +23,7 @@ NTHREADS = 16 # -c or -S?
 QUEUE = "genouest" # -p
 EMAIL_TYPE = "ALL" # --mail-type=...
 WORKING_DIR = os.getcwd() # -D
-NAME = os.getlogin() # -J
+NAME = pwd.getpwuid(os.getuid())[0] # -J
 MEM = "1000" # --mem-per-cpu=... 3541 5781
 CMD_TO_LOG = False
 QUEUES = ['genouest', 'tiny']
