@@ -30,7 +30,7 @@ cat $to_export >> ~/.bashrc
 
 To update the tool simply go to the cloned repository location and type `git pull`
 
-mggNucmer uses SlurmEasy, taken from https://github.com/dpryan79/Misc/blob/master/MPIIE_internal/SlurmEasy
+mggNucmer uses SlurmEasy, taken from https://github.com/dpryan79/Misc/blob/master/MPIIE_internal/SlurmEasy . The shebang line must be changed to your python executable.
 
 You may need to configure it for your cluster (mainly QUEUE line 22, QUEUES line 28 and MAINTEMP line 30).
 
