@@ -15,7 +15,7 @@ chmod +x Miniconda3-latest-Linux-x86_64.sh
 Create a conda virtual environment for mummer-ggplot
 
 ```
-conda create -n mummer-ggplot -c bioconda -c r mummer=3.23 deepstats
+conda create -n mummer-ggplot -c bioconda -c conda-forge mummer=3.23 deepstats
 ```
 
 Clone this repository and add the bin folder to your PATH
