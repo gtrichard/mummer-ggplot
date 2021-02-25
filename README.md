@@ -36,7 +36,7 @@ You may need to configure it for your cluster (mainly QUEUE line 22, QUEUES line
 
 ## Example output
 
-.. image:: ./docs/plot.png
+![plot](./docs/plot.png?raw=true "Example plot")
 
 ## Tools
 
